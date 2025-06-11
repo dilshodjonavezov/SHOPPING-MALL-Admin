@@ -1,45 +1,3 @@
-const productsData = {
-    'food-bread': [
-        { name: 'Белый хлеб', sku: 'bread-001', initialPrice: '2.00', markupPercentage: 25, finalPrice: '2.50', discountPercentage: 10, status: 'Активный', description: 'Свежий хлеб', quantity: 50, images: [] },
-        { name: 'Булочка с корицей', sku: 'bread-002', initialPrice: '0.80', markupPercentage: 25, finalPrice: '1.00', discountPercentage: 0, status: 'Неактивный', description: 'Сладкая выпечка', quantity: 30, images: [] }
-    ],
-    'food-fruits': [
-        { name: 'Инжир свежий', sku: 'fruit-001', initialPrice: '4.00', markupPercentage: 25, finalPrice: '5.00', discountPercentage: 0, status: 'Активный', description: 'Сезонный фрукт', quantity: 100, images: [] },
-        { name: 'Гранаты', sku: 'fruit-002', initialPrice: '3.60', markupPercentage: 25, finalPrice: '4.50', discountPercentage: 0, status: 'Активный', description: 'Полезные ягоды', quantity: 80, images: [] }
-    ],
-    'food-meat': [
-        { name: 'Говядина свежая', sku: 'meat-001', initialPrice: '8.00', markupPercentage: 25, finalPrice: '10.00', discountPercentage: 0, status: 'Активный', description: 'Свежая Говядина', quantity: 20, images: [] },
-        { name: 'Молоко 2.5%', sku: 'milk-001', initialPrice: '0.96', markupPercentage: 25, finalPrice: '1.20', discountPercentage: 0, status: 'Неактивный', description: 'Пастеризованное молоко', quantity: 150, images: [] }
-    ],
-    'clothing-coats': [
-        { name: 'Зимняя куртка', sku: 'coat-001', initialPrice: '40.00', markupPercentage: 25, finalPrice: '50.00', discountPercentage: 0, status: 'Активный', description: 'Теплая куртка', quantity: 15, images: [] }
-    ],
-    'clothing-national': [
-        { name: 'Чакан', sku: 'national-001', initialPrice: '24.00', markupPercentage: 25, finalPrice: '30.00', discountPercentage: 0, status: 'Неактивный', description: 'Национальный костюм', quantity: 10, images: [] }
-    ],
-    'clothing-kids-shoes': [
-        { name: 'Детские ботинки', sku: 'kids-shoes-001', initialPrice: '12.00', markupPercentage: 25, finalPrice: '15.00', discountPercentage: 0, status: 'Активный', description: 'Удобная обувь', quantity: 40, images: [] }
-    ],
-    'household-cleaning': [
-        { name: 'Универсальный очиститель', sku: 'clean-001', initialPrice: '2.40', markupPercentage: 25, finalPrice: '3.00', discountPercentage: 0, status: 'Активный', description: 'Для всех поверхностей', quantity: 60, images: [] }
-    ],
-    'household-dishes': [
-        { name: 'Набор тарелок', sku: 'dishes-001', initialPrice: '16.00', markupPercentage: 25, finalPrice: '20.00', discountPercentage: 0, status: 'Неактивный', quantity: 25, images: [] }
-    ],
-    'household-textile': [
-        { name: 'Постельное белье', sku: 'textile-001', initialPrice: '20.00', markupPercentage: 25, finalPrice: '25.00', discountPercentage: 0, status: 'Активный', description: 'Хлопок', quantity: 30, images: [] }
-    ],
-    'electronics-phones': [
-        { name: 'Смартфон X', sku: 'phone-001', initialPrice: '160.00', markupPercentage: 25, finalPrice: '200.00', discountPercentage: 0, status: 'Активный', description: 'Мощный смартфон', quantity: 5, images: [] }
-    ],
-    'electronics-lights': [
-        { name: 'LED лампа', sku: 'light-001', initialPrice: '4.00', markupPercentage: 25, finalPrice: '5.00', discountPercentage: 0, status: 'Неактивный', description: 'Энергоэффективная', quantity: 70, images: [] }
-    ],
-    'electronics-small': [
-        { name: 'Электрочайник', sku: 'small-001', initialPrice: '12.00', markupPercentage: 25, finalPrice: '15.00', discountPercentage: 0, status: 'Активный', description: 'Быстрый нагрев', quantity: 20, images: [] }
-    ]
-};
-
 let selectedProduct = null;
 let selectedProductIndex = -1;
 let activeCategory = null;
@@ -95,7 +53,7 @@ function showProducts(category) {
             <td>${product.name}</td>
             <td>${product.sku}</td>
             <td>
-                ${discount > 0 ? `<span class="strikethrough-price">${product.finalPrice}</span> <span class="discounted-price">${discountedPrice}</span>` : product.finalPrice}
+                ${discount > 0 ? `<span class="strikethrough-price">${product.finalPrice} TJS</span> <span class="discounted-price">${discountedPrice} TJS</span>` : `${product.finalPrice} TJS`}
             </td>
             <td><span class="${product.status === 'Активный' ? 'status-active' : 'status-inactive'}">${product.status}</span></td>
         `;
@@ -168,9 +126,9 @@ function openSidebar(mode, product = null, index = -1) {
                     <div class="form-group">
                         <label>Цены</label>
                         <div class="price-info">
-                            <p>Начальная: ${product.initialPrice}</p>
-                            <p ${discount > 0 ? 'class="strikethrough-price"' : ''}>Итоговая: ${product.finalPrice}</p>
-                            ${discount > 0 ? `<p class="discounted-price">Со скидкой: ${discountedPrice}</p>` : ''}
+                            <p>Начальная: ${product.initialPrice} TJS</p>
+                            <p ${discount > 0 ? 'class="strikethrough-price"' : ''}>Итоговая: ${product.finalPrice} TJS</p>
+                            ${discount > 0 ? `<p class="discounted-price">Со скидкой: ${discountedPrice} TJS</p>` : ''}
                         </div>
                     </div>
                     <div class="form-group">
@@ -224,7 +182,7 @@ function openSidebar(mode, product = null, index = -1) {
                             <textarea name="description" placeholder="Описание" required></textarea>
                         </div>
                         <div class="form-group">
-                            <label>Начальная цена</label>
+                            <label>Начстартовая цена (TJS)</label>
                             <input type="number" step="0.01" name="initialPrice" placeholder="0.00" required>
                         </div>
                         <div class="form-group">
@@ -232,7 +190,7 @@ function openSidebar(mode, product = null, index = -1) {
                             <input type="number" step="0.01" name="markupPercentage" placeholder="0" value="0">
                         </div>
                         <div class="form-group">
-                            <label>Итоговая цена</label>
+                            <label>Итоговая цена (TJS)</label>
                             <input type="number" step="0.01" name="finalPrice" placeholder="0.00" required>
                         </div>
                         <div class="form-group">
@@ -311,16 +269,9 @@ function openSidebar(mode, product = null, index = -1) {
                     return;
                 }
 
-                if (imageInput.files.length > 0) {
-                    for (const file of imageInput.files) {
-                        const dataUrl = await new Promise((resolve) => {
-                            const reader = new FileReader();
-                            reader.onload = (e) => resolve(e.target.result);
-                            reader.readAsDataURL(file);
-                        });
-                        images.push(dataUrl);
-                    }
-                }
+                form.querySelectorAll('.image-preview-item img').forEach(img => {
+                    images.push(img.src);
+                });
 
                 const product = {
                     name,
@@ -371,7 +322,7 @@ function openSidebar(mode, product = null, index = -1) {
                             <textarea name="description" required>${product.description || ''}</textarea>
                         </div>
                         <div class="form-group">
-                            <label>Начальная цена</label>
+                            <label>Начальная цена (TJS)</label>
                             <input type="number" step="0.01" name="initialPrice" value="${product.initialPrice}" required>
                         </div>
                         <div class="form-group">
@@ -379,7 +330,7 @@ function openSidebar(mode, product = null, index = -1) {
                             <input type="number" step="0.01" name="markupPercentage" value="${product.markupPercentage || 0}">
                         </div>
                         <div class="form-group">
-                            <label>Итоговая цена</label>
+                            <label>Итоговая цена (TJS)</loss>
                             <input type="number" step="0.01" name="finalPrice" value="${product.finalPrice}" required>
                         </div>
                         <div class="form-group">
