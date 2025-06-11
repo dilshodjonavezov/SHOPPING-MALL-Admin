@@ -83,19 +83,38 @@
                             <textarea name="description" required>${product.description || ''}</textarea>
                         </div>
                         <div class="form-group">
-                            <label>Цена</label>
-                            <input type="number" step="0.01" name="price" value="${product.price}" required>
+                            <label>Начальная цена</label>
+                            <input type="number" step="0.01" name="initialPrice" value="${product.initialPrice}" required>
                         </div>
                         <div class="form-group">
-                            <Brainstorming>Количество</label>
+                            <label>Процент наценки (%)</label>
+                            <input type="number" step="0.01" name="markupPercentage" value="${product.markupPercentage || 0}">
+                        </div>
+                        <div class="form-group">
+                            <label>Итоговая цена</label>
+                            <input type="number" step="0.01" name="finalPrice" value="${product.finalPrice}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Скидка (%)</label>
+                            <input type="number" step="0.01" name="discountPercentage" value="${product.discountPercentage || 0}">
+                        </div>
+                        <div class="form-group">
+                            <label>Количество</label>
                             <input type="number" name="quantity" value="${product.quantity}" required>
                         </div>
                         <div class="form-group">
-                            <label>Изображение</label>
+                            <label>Изображения</label>
                             <div class="file-upload">
-                                <input type="file" name="image" accept="image/*" id="image-upload">
-                                <label for="image-upload" class="file-label"><i class="fas fa-upload"></i> Выберите файл</label>
-                                <div class="image-preview" id="image-preview"></div>
+                                <input type="file" name="images" accept="image/*" id="image-upload" multiple>
+                                <label for="image-upload" class="file-label"><i class="fas fa-upload"></i> Выберите файлы</label>
+                                <div class="image-preview" id="image-preview">
+                                    ${product.images && product.images.length > 0 ? product.images.map((img, idx) => `
+                                        <div class="image-preview-item">
+                                            <img src="${img}" alt="${product.name}" class="preview-image">
+                                            <i class="fas fa-times remove-image" data-index="${idx}" onclick="removeExistingImage(this)"></i>
+                                        </div>
+                                    `).join('') : ''}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -106,59 +125,178 @@
                 </form>
             `;
 
-            document.getElementById('edit-product-form').addEventListener('submit', function(e) {
+            const form = document.getElementById('edit-product-form');
+            const initialPriceInput = form.querySelector('[name="initialPrice"]');
+            const markupPercentageInput = form.querySelector('[name="markupPercentage"]');
+            const finalPriceInput = form.querySelector('[name="finalPrice"]');
+            const imageInput = form.querySelector('#image-upload');
+            function updateFinalPrice() {
+                const initialPrice = parseFloat(initialPriceInput.value) || 0;
+                const markupPercentage = parseFloat(markupPercentageInput.value) || 0;
+                const calculatedFinalPrice = initialPrice * (1 + markupPercentage / 100);
+                finalPriceInput.value = calculatedFinalPrice.toFixed(2);
+            }
+
+            initialPriceInput.addEventListener('input', updateFinalPrice);
+            markupPercentageInput.addEventListener('input', updateFinalPrice);
+
+            let existingImages = [...product.images] || [];
+
+            imageInput.addEventListener('change', () => {
+                const preview = document.getElementById('image-preview');
+                const existingPreviews = preview.querySelectorAll('.image-preview-item');
+                const existingCount = existingImages.length;
+                Array.from(imageInput.files).forEach((file, index) => {
+                    if (file && file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            const imgContainer = document.createElement('div');
+                            imgContainer.className = 'image-preview-item';
+                            imgContainer.innerHTML = `
+                                <img src="${e.target.result}" alt="Preview ${index}" class="preview-image">
+                                <i class="fas fa-times remove-image" data-index="${existingCount + index}" data-isnew="true" onclick="removeImage(this)"></i>
+                            `;
+                            preview.appendChild(imgContainer);
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            });
+
+            window.removeExistingImage = function(element) {
+                const index = parseInt(element.dataset.index);
+                existingImages.splice(index, 1);
+                element.parentElement.remove();
+            };
+
+            window.removeImage = function(element) {
+                const index = parseInt(element.dataset.index);
+                const isNew = element.dataset.isnew === 'true';
+                if (isNew) {
+                    const files = Array.from(imageInput.files);
+                    files.splice(index - existingImages.length, 1);
+                    const dataTransfer = new DataTransfer();
+                    files.forEach(file => dataTransfer.items.add(file));
+                    imageInput.files = dataTransfer.files;
+                }
+                element.parentElement.remove();
+            };
+
+            form.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const form = this;
                 const name = form.querySelector('[name="name"]').value.trim();
                 const sku = form.querySelector('[name="sku"]').value.trim();
-                const price = form.querySelector('[name="price"]').value.trim();
+                const initialPrice = form.querySelector('[name="initialPrice"]').value.trim();
+                const markupPercentage = form.querySelector('[name="markupPercentage"]').value.trim();
+                const finalPrice = form.querySelector('[name="finalPrice"]').value.trim();
+                const discountPercentage = form.querySelector('[name="discountPercentage"]').value.trim();
                 const quantity = form.querySelector('[name="quantity"]').value.trim();
                 const description = form.querySelector('[name="description"]').value.trim();
+                const images = [...existingImages];
 
-                if (!name || !sku || !price || !quantity || !description) {
-                    showSnackbar('Заполните обязательные поля', 'error');
+                if (!name || !sku || !initialPrice || !finalPrice || !quantity || !description) {
+                    showSnackBar('Заполните обязательные поля', 'error');
                     return;
                 }
 
-                const updatedProduct = {
-                    name: name,
-                    sku: sku,
-                    price: price,
-                    status: form.querySelector('[name="status"]').checked ? 'Активный' : 'Неактивный',
-                    description: description,
-                    quantity: quantity
-                };
-                productsData[category][index] = updatedProduct;
-                showSnackbar('Товар успешно сохранён', 'success');
-                setTimeout(() => window.location.href = 'index.html', 2000);
-            });
-
-            document.getElementById('image-upload').addEventListener('change', function(e) {
-                const file = e.target.files[0];
-                const preview = document.getElementById('image-preview');
-                preview.innerHTML = '';
-                if (file && file.type.startsWith('image/')) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        preview.innerHTML = `<img src="${e.target.result}" alt="Preview" class "preview-image"><i class="fas fa-times remove-image" onclick="removeImage(this)"></i>`;
-                    };
-                    reader.readAsDataURL(file);
+                if (imageInput.files.length > 0) {
+                    for await (const file of imageInput.files) {
+                        const dataUrl = await new Promise((resolve) => {
+                            const reader = new FileReader();
+                            reader.onload = (e) => resolve(e.target.result);
+                            reader.readAsDataURL(file);
+                        });
+                        images.push(dataUrl);
+                    }
                 }
+
+                const updatedProduct = {
+                    name,
+                    sku,
+                    initialPrice: parseFloat(initialPrice).toFixed(2),
+                    markupPercentage: parseFloat(markupPercentage) || 0,
+                    finalPrice: parseFloat(finalPrice).toFixed(2),
+                    discountPercentage: parseFloat(discountPercentage) || 0,
+                    status: form.querySelector('[name="status"]').checked ? 'Активный' : 'Неактивный',
+                    description,
+                    quantity: parseInt(quantity),
+                    images
+                };
+
+                productsData[category][index] = updatedProduct;
+                showSnackBar('Товар успешно сохранён', 'success');
+                setTimeout(() => window.location.href = 'index.html', 2000);
             });
         });
 
-        function removeImage(element) {
-            const preview = element.parentElement;
-            preview.innerHTML = '';
-            document.getElementById('image-upload').value = '';
-        }
-
-        function showSnackbar(message, type) {
+        function showSnackBar(message, type) {
             const snackbar = document.getElementById('snackbar');
             snackbar.textContent = message;
             snackbar.className = 'show ' + type;
-            setTimeout(() => { snackbar.className = snackbar.className.replace('show', ''); }, 3000);
+            setTimeout(() => {
+ snackBar.className = snackBar.className.replace('show', '');
+            }, 3000);
         }
     </script>
+</body>
+</html>
+
+<xaiArtifact id="3e9a7ecb-45c2-45dd-a191-20afec30023d" title="view.html" contentType="text/html">
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Просмотр товара</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="sidebar-panel-content">
+        <span class="close" onclick="closeSidebar()">×</span>
+        <h2>Просмотр товара</h2>
+        <div class="form-group">
+            <label>Изображения</label>
+            <div id="view-images"></div>
+        </div>
+        <div class="form-group">
+            <label>Название товара</label>
+            <p id="view-name"></p>
+        </div>
+        <div class="form-group">
+            <label>Артикул</label>
+            <p id="view-sku"></p>
+        </div>
+        <div class="form-group">
+            <label>Цены</label>
+            <div class="price-info">
+                <p id="view-initial-price"></p>
+                <p id="view-final-price"></p>
+                <p id="view-discounted-price" class="discounted"></p>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Скидка</label>
+            <p id="view-discount"></p>
+        </div>
+        <div class="form-group">
+            <label>Количество</label>
+            <p id="view-quantity"></p>
+        </div>
+        <div class="form-group">
+            <label>Категория</label>
+            <p id="view-category"></p>
+        </div>
+        <div class="form-group">
+            <label>Статус</label>
+            <p id="view-status"></p>
+        </div>
+        <div class="form-group">
+            <label>Описание</label>
+            <p id="view-description"></p>
+        </div>
+    </div>
+    <script src="script.js"></script>
 </body>
 </html>

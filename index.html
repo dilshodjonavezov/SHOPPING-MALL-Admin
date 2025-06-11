@@ -10,13 +10,15 @@
 </head>
 <body>
     <script>
-        // Проверка авторизации
         if (!localStorage.getItem('isAuthenticated')) {
             window.location.href = 'auth.html';
         }
     </script>
     <div class="sidebar">
         <div class="logo">SHOPPING MALL</div>
+        <div class="menu-item">
+            <a href="#" onclick="showSection('dashboard')"><i class="fas fa-chart-line"></i> Дашборд</a>
+        </div>
         <div class="menu-item">
             <a href="#" onclick="toggleSubmenu('food')"><i class="fas fa-apple-alt"></i> Продукты питания</a>
             <div class="submenu" id="food">
@@ -57,7 +59,7 @@
     <div class="main-content">
         <div id="welcome-message" class="welcome-card">
             <h2 class="welcome-title">Добро пожаловать, Админ!</h2>
-            <p class="welcome-text">Выберите подкатегорию в меню слева, чтобы начать работу с товарами.</p>
+            <p class="welcome-text">Выберите раздел в меню слева, чтобы начать работу.</p>
         </div>
         <div id="products-container" style="display: none;">
             <table class="products-table" id="products-table">
@@ -65,15 +67,24 @@
                     <tr>
                         <th>Название</th>
                         <th>Артикул</th>
-                        <th>Цена</th>
+                        <th>Итоговая цена</th>
                         <th>Статус</th>
                     </tr>
                 </thead>
-                <tbody id="products-body">
-                    <!-- Товары будут добавлены через JS -->
-                </tbody>
+                <tbody id="products-body"></tbody>
             </table>
             <button class="add-button" onclick="openSidebar('add')"><i class="fas fa-plus"></i> Добавить</button>
+        </div>
+        <div id="dashboard-container" style="display: none;">
+            <h1 class="dashboard-title">Аналитика Торгового Центра</h1>
+            <div class="charts-grid">
+                <div class="chart-card"><canvas id="chart1"></canvas></div>
+                <div class="chart-card"><canvas id="chart2"></canvas></div>
+                <div class="chart-card"><canvas id="chart3"></canvas></div>
+                <div class="chart-card"><canvas id="chart4"></canvas></div>
+                <div class="chart-card"><canvas id="chart6"></canvas></div>
+                <div class="chart-card"><canvas id="chart7"></canvas></div>
+            </div>
         </div>
     </div>
 
@@ -92,7 +103,6 @@
         </div>
     </div>
 
-    <!-- Модальное окно для удаления -->
     <div class="modal-overlay" id="delete-modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -109,6 +119,16 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0/dist/chartjs-plugin-datalabels.min.js"></script>
+    <script src="revenue-chart.js"></script>
+    <script src="profit-chart.js"></script>
+    <script src="expense-chart.js"></script>
+    <script src="visitor-chart.js"></script>
+    <script src="rent-chart.js"></script>
+    <script src="entry-traffic-chart.js"></script>
+    <script src="mall-revenue-chart.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

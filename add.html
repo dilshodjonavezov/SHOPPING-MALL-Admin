@@ -36,24 +36,138 @@
                     <textarea name="description" placeholder="Введите описание" required></textarea>
                 </div>
                 <div class="form-group">
-                    <label>Цена</label>
-                    <input type="number" step="0.01" name="price" placeholder="Введите цену" required>
+                    <label>Начальная цена</label>
+                    <input type="number" step="0.01" name="initialPrice" placeholder="Введите начальную цену" required>
+                </div>
+                <div class="form-group">
+                    <label>Процент наценки (%)</label>
+                    <input type="number" step="0.01" name="markupPercentage" placeholder="Введите процент наценки" value="0">
+                </div>
+                <div class="form-group">
+                    <label>Итоговая цена</label>
+                    <input type="number" step="0.01" name="finalPrice" placeholder="Введите итоговую цену" required>
+                </div>
+                <div class="form-group">
+                    <label>Скидка (%)</label>
+                    <input type="number" step="0.01" name="discountPercentage" placeholder="Введите скидку" value="0">
                 </div>
                 <div class="form-group">
                     <label>Количество</label>
                     <input type="number" name="quantity" placeholder="Введите количество" required>
                 </div>
                 <div class="form-group">
-                    <label>Изображение</label>
+                    <label>Изображения</label>
                     <div class="file-upload">
-                        <input type="file" name="image" accept="image/*" id="image-upload">
-                        <label for="image-upload" class="file-label"><i class="fas fa-upload"></i> Выберите файл</label>
+                        <input type="file" name="images" accept="image/*" id="image-upload" multiple>
+                        <label for="image-upload" class="file-label"><i class="fas fa-upload"></i> Выберите файлы</label>
+                        <div class="image-preview" id="image-preview"></div>
                     </div>
                 </div>
             </div>
-            <button type="submit" class="add-button" style="margin-top: 20px;"><i class="fas fa-plus"></i> Добавить</button>
+            <div class="button-group">
+                <button type="submit" class="add-button"><i class="fas fa-plus"></i> Добавить</button>
+                <button type="button" class="cancel-button" onclick="closeSidebar()"><i class="fas fa-times"></i> Отмена</button>
+            </div>
         </form>
     </div>
     <script src="script.js"></script>
-</body>
-</html>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('add-product-form');
+            const initialPriceInput = form.querySelector('[name="initialPrice"]');
+            const markupPercentageInput = form.querySelector('[name="markupPercentage"]');
+            const finalPriceInput = form.querySelector('[name="finalPrice"]');
+            const imageInput = form.querySelector('#image-upload');
+            const preview = document.getElementById('image-preview');
+
+            function updateFinalPrice() {
+                const initialPrice = parseFloat(initialPriceInput.value) || 0;
+                const markupPercentage = parseFloat(markupPercentageInput.value) || 0;
+                const calculatedFinalPrice = initialPrice * (1 + markupPercentage / 100);
+                finalPriceInput.value = calculatedFinalPrice.toFixed(2);
+            }
+
+            initialPriceInput.addEventListener('input', updateFinalPrice);
+            markupPercentageInput.addEventListener('input', updateFinalPrice);
+
+            imageInput.addEventListener('change', () => {
+                preview.innerHTML = '';
+                Array.from(imageInput.files).forEach((file, index) => {
+                    if (file && file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            const imgContainer = document.createElement('div');
+                            imgContainer.className = 'image-preview-item';
+                            imgContainer.innerHTML = `
+                                <img src="${e.target.result}" alt="Preview ${index}" class="preview-image">
+                                <i class="fas fa-times remove-image" data-index="${index}" onclick="removeImage(this)"></i>
+                            `;
+                            preview.appendChild(imgContainer);
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            });
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const name = form.querySelector('[name="name"]').value.trim();
+                const sku = form.querySelector('[name="sku"]').value.trim();
+                const initialPrice = form.querySelector('[name="initialPrice"]').value.trim();
+                const markupPercentage = form.querySelector('[name="markupPercentage"]').value.trim();
+                const finalPrice = form.querySelector('[name="finalPrice"]').value.trim();
+                const discountPercentage = form.querySelector('[name="discountPercentage"]').value.trim();
+                const quantity = form.querySelector('[name="quantity"]').value.trim();
+                const description = form.querySelector('[name="description"]').value.trim();
+                const images = [];
+
+                if (!name || !sku || !initialPrice || !finalPrice || !quantity || !description) {
+                    showSnackbar('Заполните обязательные поля', 'error');
+                    return;
+                }
+
+                if (imageInput.files.length > 0) {
+                    for (const file of imageInput.files) {
+                        const dataUrl = await new Promise((resolve) => {
+                            const reader = new FileReader();
+                            reader.onload = (e) => resolve(e.target.result);
+                            reader.readAsDataURL(file);
+                        });
+                        images.push(dataUrl);
+                    }
+                }
+
+                const product = {
+                    name,
+                    sku,
+                    initialPrice: parseFloat(initialPrice).toFixed(2),
+                    markupPercentage: parseFloat(markupPercentage) || 0,
+                    finalPrice: parseFloat(finalPrice).toFixed(2),
+                    discountPercentage: parseFloat(discountPercentage) || 0,
+                    status: form.querySelector('[name="status"]').checked ? 'Активный' : 'Неактивный',
+                    description,
+                    quantity: parseInt(quantity),
+                    images
+                };
+
+                if (!productsData[activeCategory]) productsData[activeCategory] = [];
+                productsData[activeCategory].push(product);
+                showProducts(activeCategory);
+                showSnackbar('Товар успешно добавлен', 'success');
+                form.reset();
+                preview.innerHTML = '';
+                closeSidebar();
+            });
+        });
+
+        function removeImage(element) {
+            const index = parseInt(element.dataset.index);
+            const imageInput = document.getElementById('image-upload');
+            const files = Array.from(imageInput.files);
+            files.splice(index, 1);
+            const dataTransfer = new DataTransfer();
+            files.forEach(file => dataTransfer.items.add(file));
+            imageInput.files = dataTransfer.files;
+            element.parentElement.remove();
+        }
+    </script>
